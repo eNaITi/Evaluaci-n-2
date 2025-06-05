@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "153326923968",
+    "project_id": "flutterinta",
+    "storage_bucket": "flutterinta.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:153326923968:android:4259bbe6547f3086dabd25",
+        "android_client_info": {
+          "package_name": "com.example.flutter_firebase"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDPrA4Yk0eD4ntm1s3jIG3dHBGatQv7qOE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
