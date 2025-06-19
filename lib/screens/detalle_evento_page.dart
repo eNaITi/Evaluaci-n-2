@@ -115,7 +115,7 @@ class DetalleEventoScreen extends StatelessWidget {
     );
   }
 
-  // Widget helper para las filas de detalles.
+
   Widget _buildDetailRow(BuildContext context, IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),

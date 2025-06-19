@@ -1,9 +1,11 @@
+// Importación de paquetes necesarios
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'tema.dart';
 import 'modelo_usuario.dart';
 
+// Página que permite editar los detalles de un evento
 class EditarEventoPage extends StatefulWidget {
   final String eventoId;
   final Map<String, dynamic> eventoData;
@@ -21,13 +23,14 @@ class EditarEventoPage extends StatefulWidget {
 }
 
 class _EditarEventoPageState extends State<EditarEventoPage> {
-  final _formKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>(); 
   late Map<String, TextEditingController> _controllers;
-  bool _isLoading = false;
+  bool _isLoading = false; 
 
   @override
   void initState() {
     super.initState();
+    // Inicializa los controladores con los datos actuales del evento
     _controllers = {
       'nombre': TextEditingController(text: widget.eventoData['nombre']),
       'organizador': TextEditingController(text: widget.eventoData['organizador']),
@@ -41,22 +44,27 @@ class _EditarEventoPageState extends State<EditarEventoPage> {
 
   @override
   void dispose() {
+    // Libera los recursos de los controladores cuando se destruye el widget
     for (var controller in _controllers.values) {
       controller.dispose();
     }
     super.dispose();
   }
 
+  // Maneja la actualización del evento en Firestore
   Future<void> _handleUpdate() async {
+    // Validación del formulario
     if (!(_formKey.currentState?.validate() ?? false)) return;
     if (_isLoading) return;
     setState(() => _isLoading = true);
 
+    // Determina el nuevo estado del evento según el rol del usuario
     final String nuevoEstado = (widget.currentUser.rol == 'admin' && widget.eventoData['estado'] == 'aprobado')
         ? 'aprobado'
         : 'pendiente';
 
     try {
+      // Actualiza los datos del evento en Firestore
       await FirebaseFirestore.instance.collection('eventos').doc(widget.eventoId).update({
         'nombre': _controllers['nombre']!.text,
         'organizador': _controllers['organizador']!.text,
@@ -70,6 +78,7 @@ class _EditarEventoPageState extends State<EditarEventoPage> {
 
       if (!mounted) return;
 
+      // Muestra mensaje de éxito
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(nuevoEstado == 'pendiente'
@@ -78,9 +87,10 @@ class _EditarEventoPageState extends State<EditarEventoPage> {
           backgroundColor: Colors.green,
         ),
       );
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(); // Cierra la pantalla de edición
 
     } catch (e) {
+      // Muestra mensaje de error si la actualización falla
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -90,7 +100,7 @@ class _EditarEventoPageState extends State<EditarEventoPage> {
       );
     }
 
-    if (mounted) setState(() => _isLoading = false);
+    if (mounted) setState(() => _isLoading = false); // Finaliza estado de carga
   }
 
   @override
@@ -108,6 +118,7 @@ class _EditarEventoPageState extends State<EditarEventoPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Campos del formulario
               _campoTexto(context, _controllers['nombre']!, 'Nombre Evento'),
               const SizedBox(height: 16),
               _campoTexto(context, _controllers['organizador']!, '¿Quién organiza?'),
@@ -122,6 +133,8 @@ class _EditarEventoPageState extends State<EditarEventoPage> {
               const SizedBox(height: 16),
               _campoTexto(context, _controllers['fecha']!, 'Fecha'),
               const SizedBox(height: 32),
+
+              // Botón para actualizar evento
               FilledButton(
                 onPressed: _isLoading ? null : _handleUpdate,
                 style: FilledButton.styleFrom(
@@ -143,6 +156,7 @@ class _EditarEventoPageState extends State<EditarEventoPage> {
     );
   }
 
+  // Widget reutilizable para los campos de texto
   Widget _campoTexto(BuildContext context, TextEditingController controller, String hint) {
     final isDark = Provider.of<ThemeProvider>(context, listen: false).isDarkMode;
     return TextFormField(

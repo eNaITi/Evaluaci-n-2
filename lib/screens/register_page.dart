@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// Página de registro como un widget con estado
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
@@ -17,6 +18,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
+  // Limpia los controladores al destruir el widget
   @override
   void dispose() {
     _nombreController.dispose();
@@ -25,22 +27,28 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
+  // Función para manejar el registro
   Future<void> _handleRegister() async {
+    // Verifica que el formulario sea válido
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    // Evita múltiples envíos si ya está cargando
     if (_isLoading) return;
+
+    // Activa el indicador de carga
     setState(() { _isLoading = true; });
 
     final scaffoldMessenger = ScaffoldMessenger.of(context);
-    // [COMENTARIO] La referencia al navigator se mueve dentro del 'try'
-    // para usar el context más actualizado.
 
     try {
+      // Intenta crear un nuevo usuario con email y contraseña
       final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
       final user = credential.user;
+
       if (user != null) {
+        // Actualiza el nombre de usuario y guarda datos en Firestore
         await Future.wait([
           user.updateDisplayName(_nombreController.text.trim()),
           FirebaseFirestore.instance.collection('users').doc(user.uid).set({
@@ -52,17 +60,15 @@ class _RegisterPageState extends State<RegisterPage> {
           })
         ]);
 
-        // ===== INICIO DE LA MODIFICACIÓN =====
-        // En lugar de cerrar la página, navegamos a la pantalla de verificación.
-        // Usamos pushReplacement para que el usuario no pueda volver atrás.
+        // Redirige a la página de verificación de correo si el widget sigue montado
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const VerificarEmailPage()),
           );
         }
-        // ===== FIN DE LA MODIFICACIÓN =====
-
       }
+
+    // Manejo de errores específicos de Firebase
     } on FirebaseAuthException catch (e) {
       String message = 'Ocurrió un error durante el registro.';
       if (e.code == 'weak-password') {
@@ -74,11 +80,13 @@ class _RegisterPageState extends State<RegisterPage> {
         SnackBar(content: Text(message), backgroundColor: Theme.of(context).colorScheme.error),
       );
     } catch (e) {
+      // Manejo de cualquier otro error
       scaffoldMessenger.showSnackBar(
         SnackBar(content: Text('Un error inesperado ocurrió: $e'), backgroundColor: Theme.of(context).colorScheme.error),
       );
     }
 
+    // Desactiva el indicador de carga si aún está montado
     if (mounted) {
       setState(() { _isLoading = false; });
     }
@@ -102,9 +110,11 @@ class _RegisterPageState extends State<RegisterPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  // Icono representativo de registro
                   Icon(Icons.person_add_alt_1_rounded, size: 64, color: theme.colorScheme.primary),
                   const SizedBox(height: 24),
                   
+                  // Campo: Nombre
                   TextFormField(
                     controller: _nombreController,
                     autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -113,6 +123,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   const SizedBox(height: 16),
                   
+                  // Campo: Correo electrónico
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -122,6 +133,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   const SizedBox(height: 16),
                   
+                  // Campo: Contraseña
                   TextFormField(
                     controller: _passwordController,
                     obscureText: true,
@@ -131,18 +143,28 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   const SizedBox(height: 24),
                   
+                  // Botón para crear la cuenta
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
                       onPressed: _isLoading ? null : _handleRegister,
-                      icon: _isLoading ? Container() : const Icon(Icons.person_add),
-                      label: _isLoading ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text("Crear Cuenta"),
+                      icon: _isLoading
+                        ? Container()
+                        : const Icon(Icons.person_add),
+                      label: _isLoading
+                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Text("Crear Cuenta"),
                     ),
                   ),
                   const SizedBox(height: 16),
+
+                  // Botón para volver al inicio de sesión
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: Text("¿Ya tienes una cuenta? Iniciar sesión", style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold)),
+                    child: Text(
+                      "¿Ya tienes una cuenta? Iniciar sesión",
+                      style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ],
               ),

@@ -8,7 +8,7 @@ import 'tema.dart';
 import 'settings_page.dart';
 import 'editar_evento_page.dart';
 import 'login_page.dart';
-import 'add_evento_page.dart'; // <-- 1. IMPORTAMOS LA NUEVA PANTALLA
+import 'add_evento_page.dart';
 
 // =======================================================================
 // WIDGET PRINCIPAL QUE GESTIONA LA NAVEGACIÓN
@@ -75,7 +75,6 @@ class _EventosScreenState extends State<EventosScreen> {
         onTap: _onItemTapped,
       ),
       floatingActionButton: FloatingActionButton(
-        // 2. CAMBIAMOS LA ACCIÓN DEL BOTÓN
         onPressed: () {
           Navigator.push(
             context,
@@ -91,10 +90,7 @@ class _EventosScreenState extends State<EventosScreen> {
   }
 }
 
-// =======================================================================
-// DRAWER Y OTRAS CLASES (SIN CAMBIOS)
-// ... El resto del archivo permanece exactamente igual ...
-// =======================================================================
+
 class AppDrawer extends StatelessWidget {
   final AppUser currentUser;
   const AppDrawer({super.key, required this.currentUser});
@@ -332,13 +328,21 @@ class _UserSubmissionsListState extends State<UserSubmissionsList> with Automati
   @override
   void initState() {
     super.initState();
-    _stream = FirebaseFirestore.instance.collection('eventos').where('creadoPor', isEqualTo: widget.currentUser.uid).orderBy('timestamp', descending: true).snapshots();
+    _stream = FirebaseFirestore.instance.collection('eventos').where('creadoPor', 
+    isEqualTo: widget.currentUser.uid).orderBy('timestamp', descending: true).snapshots();
   }
 
   Future<void> _borrarEvento(String eventoId) async {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
-    final confirmar = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(title: const Text('Confirmar Cancelación'), content: const Text('¿Estás seguro?'), actions: [TextButton(child: const Text('No'), onPressed: () => navigator.pop(false)), TextButton(style: TextButton.styleFrom(foregroundColor: Colors.red), child: const Text('Sí, Cancelar'), onPressed: () => navigator.pop(true))]));
+    final confirmar = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
+      title: const Text('Confirmar Cancelación'), 
+    content: const Text('¿Estás seguro?'), 
+    actions: [TextButton(child: const Text('No'), 
+    onPressed: () => navigator.pop(false)), 
+    TextButton(style: TextButton.styleFrom(foregroundColor: Colors.red), 
+    child: const Text('Sí, Cancelar'), onPressed: () => navigator.pop(true))]
+    ));
     if (confirmar == true) {
       try {
         await FirebaseFirestore.instance.collection('eventos').doc(eventoId).delete();
@@ -376,12 +380,25 @@ class _UserSubmissionsListState extends State<UserSubmissionsList> with Automati
                   leading: estadoIcon,
                   title: Text(data['nombre'] ?? ''),
                   subtitle: Text('Estado: ${estado[0].toUpperCase()}${estado.substring(1)}'),
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => DetalleEventoScreen(evento: data, eventoId: doc.id, currentUser: widget.currentUser))),
+                  onTap: () => Navigator.push(context, 
+                  MaterialPageRoute(builder: (_) => DetalleEventoScreen(
+                    evento: data, 
+                    eventoId: doc.id, currentUser: widget.currentUser))),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      IconButton(icon: const Icon(Icons.edit_outlined, color: Colors.blueGrey), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => EditarEventoPage(eventoId: doc.id, eventoData: data, currentUser: widget.currentUser)))),
-                      if (estado == 'pendiente') IconButton(tooltip: 'Cancelar envío', icon: const Icon(Icons.delete_forever, color: Colors.grey), onPressed: () => _borrarEvento(doc.id)),
+                      IconButton(icon: const Icon(Icons.edit_outlined,
+                      color: Colors.blueGrey),
+                      onPressed: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => EditarEventoPage(eventoId: doc.id, eventoData: data,
+                      currentUser: widget.currentUser)
+                      )
+                      )
+                      ),
+                      if (estado == 'pendiente') IconButton(tooltip: 'Cancelar envío',
+                      icon: const Icon(Icons.delete_forever, 
+                      color: Colors.grey), onPressed: () => _borrarEvento(doc.id)
+                      ),
                     ],
                   )));
         });
