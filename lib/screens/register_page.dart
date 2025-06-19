@@ -1,7 +1,7 @@
 import 'verificar_email_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -31,7 +31,9 @@ class _RegisterPageState extends State<RegisterPage> {
     setState(() { _isLoading = true; });
 
     final scaffoldMessenger = ScaffoldMessenger.of(context);
-    
+    // [COMENTARIO] La referencia al navigator se mueve dentro del 'try'
+    // para usar el context más actualizado.
+
     try {
       final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
@@ -39,21 +41,26 @@ class _RegisterPageState extends State<RegisterPage> {
       );
       final user = credential.user;
       if (user != null) {
+        await Future.wait([
+          user.updateDisplayName(_nombreController.text.trim()),
+          FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+            'uid': user.uid,
+            'nombre': _nombreController.text.trim(),
+            'email': _emailController.text.trim(),
+            'rol': 'usuario',
+            'creadoEn': FieldValue.serverTimestamp(),
+          })
+        ]);
 
-        // ===== INICIO DE CAMBIOS =====
-        // HEMOS ELIMINADO LA ESCRITURA EN FIRESTORE DE AQUÍ.
-        // Ahora, esta función solo tiene una responsabilidad: crear la cuenta
-        // en Firebase Auth y guardar el nombre del usuario en su perfil.
-        await user.updateDisplayName(_nombreController.text.trim());
-        // ===== FIN DE CAMBIOS =====
-
-        // La navegación a la página de verificación se mantiene igual,
-        // ya que es el siguiente paso lógico para el usuario.
+        // ===== INICIO DE LA MODIFICACIÓN =====
+        // En lugar de cerrar la página, navegamos a la pantalla de verificación.
+        // Usamos pushReplacement para que el usuario no pueda volver atrás.
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const VerificarEmailPage()),
           );
         }
+        // ===== FIN DE LA MODIFICACIÓN =====
 
       }
     } on FirebaseAuthException catch (e) {
